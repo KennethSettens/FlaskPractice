@@ -5,7 +5,7 @@ from surveys import satisfaction_survey as survey
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "purp"
 
-responsesArr = []
+KEY = "responses"
 
 @app.route('/')
 def index():
@@ -14,6 +14,19 @@ def index():
 
 @app.route('/questions/<int:num>')
 def render_question(num):
+
+    responses = session.get(KEY)
+
+    if (responses is None):
+        return redirect("/")
+
+    if (len(responses) == len(survey.questions)):
+        return redirect("/complete")
+
+    if (len(responses) != num): 
+        flash(f"Invalid question id: {num}.")
+        return redirect(f"/questions/{len(responses)}")
+
     question = survey.questions[num]
     return render_template("/question.html", index=num, question=question)
 
@@ -21,17 +34,19 @@ def render_question(num):
 @app.route("/answer", methods=["POST"])
 def store_answer():
     answer = request.form["answer"] 
-    responsesArr.append(answer)
+    responses = session[KEY]
+    responses.append(answer)
+    session[KEY] = responses
 
-    if (len(responsesArr) == len(survey.questions)):
+    if (len(responses) == len(survey.questions)):
         return redirect("/completed")
     else:
-        return redirect(f"/questions/{len(responsesArr)}")
+        return redirect(f"/questions/{len(responses)}")
 
 
 @app.route('/start', methods=["POST"])
 def start_survey():
-    responsesArr = []
+    session[KEY] = []
     return redirect("/questions/0")
 
 
