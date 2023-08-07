@@ -11,7 +11,6 @@ class Question:
 
 class Survey:
     def __init__(self, title, instructions, questions):
-
         self.title = title
         self.instructions = instructions
         self.questions = questions
